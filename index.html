@@ -48,8 +48,7 @@
                                 <span class="msg-attachment"><i class="fa fa-paperclip"></i></span>
                             </div>
                             <div class="msg-subject">
-                                <span class="msg-subject"><strong id="fake-subject-1">{{ msg.timestamp
-                                        }}</strong></span>
+                                <span class="msg-subject"><strong id="fake-subject-1">{{ msg.timestamp }}</strong></span>
                             </div>
                             <div class="msg-snippet">
                                 <p id="fake-snippet-1">{{ msg.subtitle }}</p>
@@ -127,6 +126,7 @@
                             loadContent(url, function (content) {
                                 temp += content;
                                 temp += "\r\n";
+                                temp += "<hr>";
                                 temp += "\r\n";
                             })
                         }
