@@ -18,6 +18,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"
         integrity="sha512-LhccdVNGe2QMEfI3x4DVV3ckMRe36TfydKss6mJpdHjNFiV07dFpS2xzeZedptKZrwxfICJpez09iNioiSZ3hA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="./js/showdown-table.js"></script>
 </head>
 
 <body>
@@ -151,7 +153,7 @@
                     $('#msg-card-' + index).addClass('active');
                     $('.message .address .name').text(msg.subtitle);
                     $('.message .address .email').text(msg.email);
-                    var converter = new showdown.Converter(),
+                    var converter = new showdown.Converter({extensions: ['table']}),
                         text      = msg.content,
                         markdown      = converter.makeHtml(text);
 
