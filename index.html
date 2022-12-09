@@ -116,23 +116,56 @@
                     let title = findWord("<title>", "</title>", text);
                     let subtitle = findWord("<subtitle>", "</subtitle>", text);
                     let timestamp = findWord("<timestamp>", "</timestamp>", text);
-                    let content = findWord("<content>", "</content>", text);
+                    let content = findWord("<urls>", "</urls>", text).split(",");
                     let emails = findWord("<email>", "</email>", text);
+                    let temp = "";
 
-                    let dataSet = {
-                        title: title,
-                        subtitle: subtitle,
-                        email: emails,
-                        content: content,
-                        timestamp: timestamp
-                    }
-
-                    setData(dataSet);
+                  
                     
+                    loadContent(content[0], function(first){
+                        temp += first;
+        
+                        loadContent(content[1], function(second){
+                            temp += "\r\n";
+                            temp += "\r\n";
+
+                            temp += second;
+                            let dataSet = {
+                                title: title,
+                                subtitle: subtitle,
+                                email: emails,
+                                content: temp,
+                                timestamp: timestamp
+                            }   
+
+
+                            setData(dataSet);
+                        });
+                    });
+
+                
+                  
+                
                 }
             };
 
             xhr.open("GET", fileName, false);
+            xhr.send();
+
+        }
+
+        
+        function loadContent(url, callback) {
+            let text = null;
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === xhr.DONE && xhr.status === 200) {
+                    text = xhr.responseText;
+                    callback(text);
+                }
+            };
+
+            xhr.open("GET", url, false);
             xhr.send();
 
         }
