@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
     <meta property="og:title" content="STUDY">
     <meta property="og:description" content="스터디 모임">
-    <meta property="og:image" content="https://avatars.githubusercontent.com/u/118423430?s=200&v=4">   
+    <meta property="og:image" content="https://avatars.githubusercontent.com/u/118423430?s=200&v=4">
     <!-- Bulma Version 0.9.0-->
     <link rel="stylesheet" href="https://unpkg.com/bulma@0.9.0/css/bulma.min.css" />
     <link rel="stylesheet" type="text/css" href="./css/inbox.css">
@@ -23,8 +23,8 @@
 </head>
 
 <body>
-    <div class="container is-fluid">
-        <div class="container is-fluid">
+    <div class="container">
+        <div class="container">
             <nav class="navbar has-shadow">
                 <div class="navbar-brand">
                     <a class="navbar-item" href="#">
@@ -37,7 +37,7 @@
 
 
         <div class="columns" id="mail-app">
-            <div class="column is-4 messages hero is-fullheight" id="message-feed">
+            <div class="column is-3 messages hero is-fullheight" id="message-feed">
                 <div class="inbox-messages" id="inbox-messages">
                     <div v-for="(msg, index) in messages" class="card" v-bind:id="'msg-card-'+index"
                         v-on:click="showMessage(msg,index)" v-bind:data-preview-id="index">
@@ -58,7 +58,7 @@
                     </div>
                 </div>
             </div>
-            <div class="column is-8 message hero is-fullheight is-hidden" id="message-pane">
+            <div class="column is-9 message hero is-fullheight is-hidden" id="message-pane">
                 <div class="box message-preview">
                     <div class="top">
                         <div class="avatar">
@@ -106,46 +106,43 @@
         }
 
 
-        function loadFile(fileName) {
-            let text = null;
+        function loadFile(fileName, onSuccess) {
+            let text = "";
             let xhr = new XMLHttpRequest();
+
             xhr.onreadystatechange = function () {
-                if (xhr.readyState === xhr.DONE && xhr.status === 200) {
-                    text = xhr.responseText;
+                if (xhr.readyState === xhr.DONE) {
+                    if (xhr.status === 200) {
+                        text = xhr.responseText;
 
-                    let title = findWord("<title>", "</title>", text);
-                    let subtitle = findWord("<subtitle>", "</subtitle>", text);
-                    let timestamp = findWord("<timestamp>", "</timestamp>", text);
-                    let content = findWord("<urls>", "</urls>", text).split(",");
-                    let emails = findWord("<email>", "</email>", text);
-                    let temp = "";
-
-                  
-                    
-                    loadContent(content[0], function(first){
-                        temp += first;
-        
-                        loadContent(content[1], function(second){
-                            temp += "\r\n";
-                            temp += "\r\n";
-
-                            temp += second;
-                            let dataSet = {
-                                title: title,
-                                subtitle: subtitle,
-                                email: emails,
-                                content: temp,
-                                timestamp: timestamp
-                            }   
+                        let title = findWord("<title>", "</title>", text);
+                        let subtitle = findWord("<subtitle>", "</subtitle>", text);
+                        let timestamp = findWord("<timestamp>", "</timestamp>", text);
+                        let urls = findWord("<urls>", "</urls>", text).split(",");
+                        let emails = findWord("<email>", "</email>", text);
+                        let temp = "";
 
 
-                            setData(dataSet);
-                        });
-                    });
+                        for (url of urls) {
+                            loadContent(url, function (content) {
+                                temp += content;
+                                temp += "\r\n";
+                                temp += "\r\n";
+                            })
+                        }
 
-                
-                  
-                
+                        let dataSet = {
+                            title: title,
+                            subtitle: subtitle,
+                            email: emails,
+                            content: temp,
+                            timestamp: timestamp
+                        }
+
+
+                        onSuccess(dataSet);
+
+                    } 
                 }
             };
 
@@ -154,7 +151,7 @@
 
         }
 
-        
+
         function loadContent(url, callback) {
             let text = null;
             let xhr = new XMLHttpRequest();
@@ -170,9 +167,8 @@
 
         }
 
-        window.inbox = {};
 
-        var inboxVue = new Vue({
+        let inboxVue = new Vue({
             el: '#mail-app',
             data: {
                 messages: [
@@ -186,16 +182,16 @@
                     $('#msg-card-' + index).addClass('active');
                     $('.message .address .name').text(msg.subtitle);
                     $('.message .address .email').text(msg.email);
-                    var converter = new showdown.Converter({extensions: ['table']}),
-                        text      = msg.content,
-                        markdown      = converter.makeHtml(text);
+                    var converter = new showdown.Converter({ extensions: ['table'] }),
+                        text = msg.content,
+                        markdown = converter.makeHtml(text);
 
                     var msg_body = markdown;
                     $('.message .content').html(msg_body);
                 },
 
-                pushData: function (index) {
-                    this.$set(this.messages, index, window.inbox[index]);
+                pushData: function (index, data) {
+                    this.$set(this.messages, index, data);
                 },
 
                 getDataLength() {
@@ -208,20 +204,26 @@
 
 
         function setData(dataSet) {
-            window.inbox[inboxVue.getDataLength()] = {
-                title: dataSet.title,
-                email: dataSet.email,
-                timestamp: dataSet.timestamp,
-                subtitle: dataSet.subtitle,
-                content: dataSet.content,
-            };
-
-            inboxVue.pushData(inboxVue.getDataLength());
-
+            inboxVue.pushData(inboxVue.getDataLength(), dataSet);
         }
 
-        for (let i = 1; i < 10; i++) {
-            loadFile("post/" + i + ".md");
+       
+
+        function initData(index){
+            loadFile("post/" + index + ".md", function (dataSet) {
+                setData(dataSet);
+                index++;
+
+                initData(index);
+            });
+        }
+
+
+        window.onload = function(){
+            let index = 1;
+            let count = 0;
+            
+            initData(index);
         }
 
     </script>
